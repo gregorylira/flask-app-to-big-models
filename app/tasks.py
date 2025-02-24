@@ -1,16 +1,15 @@
-from huggingface_hub import InferenceClient
 import os
+from transformers import pipeline, logging
 
-client = InferenceClient(provider="novita", api_key=os.getenv("HUGGINGFACE_API_KEY"))
+logging.set_verbosity_error()
+
+pipe = pipeline("text-generation", model="openai-community/gpt2")
 
 
 def process_text(text):
-    messages = [{"role": "user", "content": text}]
-
-    completion = client.chat.completions.create(
-        model="deepseek-ai/DeepSeek-R1",
-        messages=messages,
-        max_tokens=500,
-    )
-
-    return completion.choices[0].message
+    print("processando texto")
+    completion = pipe(text, max_length=50, truncation=True, num_return_sequences=1)[0][
+        "generated_text"
+    ]
+    print("texto processado")
+    return completion

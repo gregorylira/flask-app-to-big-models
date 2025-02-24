@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo de Mensageria com RabbitMQ</title>
+</head>
+<body>
+  <h1>Demo de Mensageria</h1>
+  <form id="task-form">
+    <textarea id="text-input" placeholder="Digite seu texto aqui" rows="5" cols="50"></textarea><br>
+    <button type="submit">Enviar</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    document.getElementById("task-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const text = document.getElementById("text-input").value;
+      
+      // Enviar o texto para o endpoint /predict
+      const response = await fetch("/api/predict", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({text: text})
+      });
+      const data = await response.json();
+      const jobId = data.job_id;
+      document.getElementById("result").innerText = "Job enviado. ID: " + jobId;
+      
+      // Polling para buscar o resultado
+      const interval = setInterval(async () => {
+        const res = await fetch("/api/result/" + jobId);
+        const resultData = await res.json();
+        if (resultData.result) {
+          document.getElementById("result").innerText = "Resultado: " + JSON.stringify(resultData.result, null, 2);
+          clearInterval(interval);
+        } else if (resultData.status) {
+          document.getElementById("result").innerText = "Status: " + resultData.status;
+        }
+      }, 2000);
+    });
+  </script>
+</body>
+</html>

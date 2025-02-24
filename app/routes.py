@@ -1,8 +1,10 @@
-from app import app
+# app/routes.py
+import os, uuid, json
 from flask import request, jsonify
-from app import q
-from rq.job import Job
-from app.tasks import process_text
+from app import app
+from app.job_store import add_job, get_job
+
+import pika
 
 
 @app.route("/")
@@ -13,21 +15,37 @@ def index():
 @app.route("/predict", methods=["POST"])
 def predict():
     data = request.get_json()
-    text = data["text"]
+    text = data.get("text")
     if not text:
-        return jsonify({"error": "no text provided"})
-    job = q.enqueue(process_text, text)
-    return jsonify({"job_id": job.get_id()})
+        return jsonify({"error": "no text provided"}), 400
+
+    job_id = str(uuid.uuid4())
+
+    add_job(job_id)
+
+    rabbitmq_host = os.getenv("RABBITMQ_HOST", "rabbitmq")
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host))
+    channel = connection.channel()
+    channel.queue_declare(queue="task_queue", durable=True)
+    message = {"job_id": job_id, "text": text}
+    channel.basic_publish(
+        exchange="",
+        routing_key="task_queue",
+        body=json.dumps(message),
+        properties=pika.BasicProperties(delivery_mode=2),
+    )
+    connection.close()
+
+    return jsonify({"job_id": job_id})
 
 
 @app.route("/result/<job_id>", methods=["GET"])
 def get_result(job_id):
-    try:
-        job = Job.fetch(job_id, connection=q.connection)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    if job.is_finished:
-        return jsonify({"result": job.result})
+    job = get_job(job_id)
+    if job is None:
+        return jsonify({"error": "Job não encontrado"}), 404
+    status, result = job
+    if status == "finished":
+        return jsonify({"result": json.loads(result)})
     else:
-        return jsonify({"status": job.get_status()}), 202
+        return jsonify({"status": status}), 202
