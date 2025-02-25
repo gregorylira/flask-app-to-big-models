@@ -1,4 +1,3 @@
-# app/routes.py
 import os, uuid, json
 from flask import request, jsonify
 from app import app

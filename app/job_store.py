@@ -1,4 +1,3 @@
-# app/job_store.py
 import sqlite3
 
 

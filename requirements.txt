@@ -1,5 +1,4 @@
 Flask==3.0.2
-redis==5.2.1
 rq==2.1.0
 gunicorn==23.0.0
 torch==2.4.0
