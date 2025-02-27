@@ -10,13 +10,11 @@ const Index = () => {
   const [socket, setSocket] = useState<any>(null);
 
   useEffect(() => {
-    // Conectando ao WebSocket
     const socketConnection = io("http://localhost:5000", {
       transports: ["websocket"],
     });
     setSocket(socketConnection);
 
-    // Ouvindo o evento de status
     socketConnection.on(
       "status",
       (data: { job_id: string; status: string }) => {
@@ -26,19 +24,18 @@ const Index = () => {
       }
     );
 
-    // Ouvindo o evento de resultado
     socketConnection.on("result", (data: { job_id: string; result: any }) => {
       if (data.job_id === jobId) {
         setResult(data.result);
+        setText(data.result.content);
         setStatus("Resultado: Processado!");
       }
     });
 
-    // Cleanup (fechando a conexão WebSocket quando o componente for desmontado)
     return () => {
       socketConnection.disconnect();
     };
-  }, [jobId]); // Dependência no jobId para reconectar com o job correto
+  }, [jobId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

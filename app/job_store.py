@@ -1,5 +1,6 @@
 import sqlite3
 from app import socketio
+import json
 
 
 def init_db():
@@ -33,7 +34,8 @@ def update_job(job_id, result):
     )
     conn.commit()
     conn.close()
-    socketio.emit("result", {"job_id": job_id, "result": result})
+    result_obj = json.loads(result)
+    socketio.emit("result", {"job_id": job_id, "result": result_obj})
 
 
 def get_job(job_id):
