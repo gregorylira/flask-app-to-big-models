@@ -4,7 +4,7 @@ services:
   web:
     build: .
     expose:
-      - "8000"
+      - "5000"
     environment:
       - FLASK_APP=run.py
     depends_on:
@@ -13,6 +13,8 @@ services:
       - .env
     volumes:
       - ./jobs.db:/app/jobs.db
+    ports:
+      - "5000:5000"
   
   rabbitmq:
     image: rabbitmq:3-management
