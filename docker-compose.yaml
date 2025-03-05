@@ -35,11 +35,8 @@ services:
       - ./jobs.db:/app/jobs.db
 
   nginx:
-    image: nginx:latest
+    build: ./frontend/
     ports:
       - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./demo-frontend:/usr/share/nginx/html:ro
     depends_on:
       - web

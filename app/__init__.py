@@ -15,7 +15,7 @@ app.config["REDIS_URL"] = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 socketio = SocketIO(
     app,
-    cors_allowed_origins=["http://localhost:3000"],
+    cors_allowed_origins=["http://localhost"],
     message_queue=app.config["RABBITMQ_HOST"],
 )
 
